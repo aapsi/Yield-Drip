@@ -23,7 +23,7 @@ Yield-Drip/
 │   ├── src/           # Backend source code
 │   ├── tests/         # Backend tests
 │   └── package.json   # Backend dependencies
-├── frontend/          # User interface
+├── frontend/app       # User interface
 │   ├── src/           # Frontend source code
 │   ├── public/        # Static assets
 │   └── package.json   # Frontend dependencies
