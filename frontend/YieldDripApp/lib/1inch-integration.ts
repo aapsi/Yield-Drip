@@ -7,6 +7,11 @@ import {
 import { ethers } from 'ethers';
 import { createCustomSDK } from './1inch/custom-sdk';
 
+// Helper function to validate addresses
+function isValidAddress(address: string): boolean {
+  return ethers.isAddress(address) && address !== '0x0000000000000000000000000000000000000000';
+}
+
 // Contract addresses (update these with your deployed addresses)
 const CONTRACT_ADDRESSES = {
   // Mainnet addresses (update for your target network)
@@ -16,9 +21,9 @@ const CONTRACT_ADDRESSES = {
   LOP: '0x1111111254EEB25477B68fb85Ed929f73A960582',
   
   // Your deployed contract addresses (update these)
-  YIELD_DEPOSIT_HELPER: '0x...', // Update with your deployed address
-  YIELD_WITHDRAW_HELPER: '0x...', // Update with your deployed address
-  LINEAR_TWAP_GETTER: '0x...', // Update with your deployed address
+  YIELD_DEPOSIT_HELPER: '0x0000000000000000000000000000000000000000', // Update with your deployed address
+  YIELD_WITHDRAW_HELPER: '0x0000000000000000000000000000000000000000', // Update with your deployed address
+  LINEAR_TWAP_GETTER: '0x0000000000000000000000000000000000000000', // Update with your deployed address
   
   // Chainlink price feeds
   ETH_DAI_FEED: '0x773616E4d11A78F511299002da53A1B9E02518a7', // Mainnet ETH/DAI
@@ -151,16 +156,16 @@ export class YieldDrip1inchIntegration {
 
     // Generate unique salt and nonce
     const salt = this.generateSalt(maker, sliceNumber);
-    const nonce = randBigInt((1n << 48n) - 1n);
-    const expiresIn = 24 * 60 * 60n; // 24 hours
+    const nonce = randBigInt(BigInt((1 << 48) - 1));
+    const expiresIn = BigInt(24 * 60 * 60); // 24 hours
     const expiration = BigInt(Math.floor(Date.now() / 1000)) + expiresIn;
 
     // Build maker traits
     const makerTraits = MakerTraits.default()
       .withExpiration(expiration)
       .withNonce(nonce)
-      .allowMultipleFills(true)
-      .allowPartialFill(true);
+      .allowMultipleFills()
+      .allowPartialFills();
 
     // Encode pre-interaction (deposit DAI into sDAI)
     const preInteractionData = ethers.AbiCoder.defaultAbiCoder().encode(
@@ -228,9 +233,10 @@ export class YieldDrip1inchIntegration {
    * Generate unique salt for order
    */
   private generateSalt(maker: string, sliceNumber: number): bigint {
-    return ethers.keccak256(
+    const hash = ethers.keccak256(
       ethers.toUtf8Bytes(`${maker}-${sliceNumber}-${Date.now()}`)
-    ) as bigint;
+    );
+    return BigInt(hash);
   }
 
   /**

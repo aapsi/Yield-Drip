@@ -5,20 +5,20 @@ export const CHAIN_ID = 84532 // Base Sepolia
 // Contract addresses (will be updated after deployment)
 export const ADDRESSES = {
   // Custom LOP deployment on your testnet
-  LIMIT_ORDER_PROTOCOL: process.env.NEXT_PUBLIC_LIMIT_ORDER_PROTOCOL || "0x...", // Your deployed LOP
+  LIMIT_ORDER_PROTOCOL: process.env.NEXT_PUBLIC_LIMIT_ORDER_PROTOCOL || "0x0000000000000000000000000000000000000000", // Your deployed LOP
   
   // Token addresses on your testnet  
-  DAI: process.env.NEXT_PUBLIC_DAI_ADDRESS || "0x...", // Mock DAI on your testnet
-  WETH: process.env.NEXT_PUBLIC_WETH_ADDRESS || "0x...", // WETH on your testnet
+  DAI: process.env.NEXT_PUBLIC_DAI_ADDRESS || "0x0000000000000000000000000000000000000000", // Mock DAI on your testnet
+  WETH: process.env.NEXT_PUBLIC_WETH_ADDRESS || "0x0000000000000000000000000000000000000000", // WETH on your testnet
   
   // Our YieldDrip contract addresses (update these after deployment)
-  YIELD_DEPOSIT_HELPER: process.env.NEXT_PUBLIC_YIELD_DEPOSIT_HELPER || "0x...", // Update with your deployed address
-  YIELD_WITHDRAW_HELPER: process.env.NEXT_PUBLIC_YIELD_WITHDRAW_HELPER || "0x...", // Update with your deployed address
-  LINEAR_TWAP_GETTER: process.env.NEXT_PUBLIC_LINEAR_TWAP_GETTER || "0x...", // Update with your deployed address
-  MOCK_ERC4626_YIELD: process.env.NEXT_PUBLIC_MOCK_ERC4626_YIELD || "0x...", // Mock sDAI vault
+  YIELD_DEPOSIT_HELPER: process.env.NEXT_PUBLIC_YIELD_DEPOSIT_HELPER || "0x0000000000000000000000000000000000000000", // Update with your deployed address
+  YIELD_WITHDRAW_HELPER: process.env.NEXT_PUBLIC_YIELD_WITHDRAW_HELPER || "0x0000000000000000000000000000000000000000", // Update with your deployed address
+  LINEAR_TWAP_GETTER: process.env.NEXT_PUBLIC_LINEAR_TWAP_GETTER || "0x0000000000000000000000000000000000000000", // Update with your deployed address
+  MOCK_ERC4626_YIELD: process.env.NEXT_PUBLIC_MOCK_ERC4626_YIELD || "0x0000000000000000000000000000000000000000", // Mock sDAI vault
   
   // Price feed for your testnet
-  ETH_DAI_FEED: process.env.NEXT_PUBLIC_ETH_DAI_FEED || "0x...", // Price feed on your testnet
+  ETH_DAI_FEED: process.env.NEXT_PUBLIC_ETH_DAI_FEED || "0x0000000000000000000000000000000000000000", // Price feed on your testnet
 } as const
 
 // Default values for strategy creation
