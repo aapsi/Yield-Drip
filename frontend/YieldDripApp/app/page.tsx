@@ -62,7 +62,6 @@ export default function HomePage() {
       {/* Dashboard Navigation for Connected Users */}
       <DashboardNav />
 
-
     </main>
   )
 }

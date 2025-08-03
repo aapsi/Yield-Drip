@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { 
   TrendingUp, 
@@ -13,17 +14,11 @@ import {
 
 export function DashboardNav() {
   const router = useRouter()
-  const [isConnected, setIsConnected] = useState(false)
+  const { isConnected } = useAccount()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    // Check if wallet is connected
-    if (typeof window.ethereum !== 'undefined') {
-      window.ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
-        setIsConnected(accounts.length > 0)
-      })
-    }
   }, [])
 
   // Don't render anything during SSR to prevent hydration mismatch

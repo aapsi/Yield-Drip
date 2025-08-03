@@ -6,4 +6,11 @@ remappings = [
     "@1inch/solidity-utils/=lib/solidity-utils/"
 ]
 
+# Testnet deployment settings
+[rpc_endpoints]
+base-sepolia = "https://sepolia.base.org"
+
+[etherscan]
+base-sepolia = { key = "" }
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

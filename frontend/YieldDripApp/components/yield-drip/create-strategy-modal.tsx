@@ -5,33 +5,155 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { X } from "lucide-react"
+import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { use1inchIntegration } from "@/hooks/use1inchIntegration"
+import { useAccount } from "wagmi"
+import { ethers } from "ethers"
 
 interface YieldDripModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (strategyId: string, orders: any[]) => void
 }
 
 export function YieldDripModal({ isOpen, onClose, onSuccess }: YieldDripModalProps) {
+  const { address } = useAccount()
+  const { 
+    isInitialized, 
+    isLoading, 
+    error, 
+    createStrategy, 
+    resetError 
+  } = use1inchIntegration(false) // Use real 1inch SDK with deployed contracts
+
   const [step, setStep] = useState(1)
-  const [strategyType, setStrategyType] = useState<"yield" | "dca">("yield")
+  const [strategyType, setStrategyType] = useState<"yield" | "dca">("dca")
   const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium")
   const [formData, setFormData] = useState({
     totalAmount: 1000,
     weeklyAmount: 100,
     duration: 10,
+    slicesCount: 6,
+    priceFloor: 1500,
   })
+  const [isCreating, setIsCreating] = useState(false)
+  const [creationStep, setCreationStep] = useState<'form' | 'creating' | 'success' | 'error'>('form')
 
   if (!isOpen) return null
 
-  const handleSubmit = () => {
-    // Simulate strategy creation
-    setTimeout(() => {
-      onSuccess()
-    }, 1000)
+  // Show creation states
+  if (creationStep === 'creating') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-2xl p-6 w-full max-w-md">
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-12 w-12 animate-spin text-[#00FFB2] mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Creating Your Strategy</h3>
+            <p className="text-gray-400 text-center mb-6">
+              Building {formData.slicesCount} yield-earning DCA orders...
+            </p>
+            <div className="w-full bg-gray-800 rounded-full h-2">
+              <div className="bg-gradient-to-r from-[#00D1FF] to-[#00FFB2] h-2 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (creationStep === 'success') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-2xl p-6 w-full max-w-md">
+          <div className="flex flex-col items-center justify-center py-8">
+            <CheckCircle className="h-12 w-12 text-[#00FFB2] mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Strategy Created!</h3>
+            <p className="text-gray-400 text-center mb-6">
+              Your yield-earning DCA strategy is now active
+            </p>
+            <Button onClick={onClose} className="w-full">
+              Continue
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (creationStep === 'error') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-2xl p-6 w-full max-w-md">
+          <div className="flex flex-col items-center justify-center py-8">
+            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Creation Failed</h3>
+            <p className="text-gray-400 text-center mb-6">
+              {error || "Failed to create strategy. Please try again."}
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => setCreationStep('form')} variant="outline">
+                Try Again
+              </Button>
+              <Button onClick={onClose}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const handleSubmit = async () => {
+    if (!address) {
+      alert('Please connect your wallet first')
+      return
+    }
+
+    if (!isInitialized) {
+      alert('1inch integration not ready. Please try again.')
+      return
+    }
+
+    try {
+      setIsCreating(true)
+      setCreationStep('creating')
+      resetError()
+
+      // Calculate timing
+      const now = Math.floor(Date.now() / 1000)
+      const endTime = now + (formData.duration * 3600)
+
+      const strategy = {
+        name: `${strategyType === 'dca' ? 'DCA' : 'Yield'} Strategy ${Date.now()}`,
+        totalDaiAmount: formData.totalAmount.toString(),
+        periodHours: formData.duration,
+        slicesCount: formData.slicesCount,
+        priceFloorWei: ethers.parseEther(formData.priceFloor.toString()).toString(),
+        startTime: now,
+        endTime: endTime,
+      }
+
+      const result = await createStrategy(strategy)
+
+      if (result) {
+        setCreationStep('success')
+        onSuccess(result.strategyId, result.orders)
+      } else {
+        setCreationStep('error')
+      }
+    } catch (err) {
+      console.error('Strategy creation failed:', err)
+      setCreationStep('error')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const idleFunds = formData.totalAmount - formData.weeklyAmount
@@ -303,9 +425,19 @@ export function YieldDripModal({ isOpen, onClose, onSuccess }: YieldDripModalPro
           </Button>
           <Button
             onClick={() => (step < 3 ? setStep(step + 1) : handleSubmit())}
+            disabled={step === 3 && (!isInitialized || isLoading || isCreating)}
             className="bg-gradient-to-r from-gray-700 to-gray-900 border border-gray-600 hover:from-gray-600 hover:to-gray-800 hover:border-gray-500 text-white"
           >
-            {step < 3 ? "Continue" : "Create Strategy"}
+            {step < 3 ? "Continue" : (
+              isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Strategy"
+              )
+            )}
           </Button>
         </div>
       </div>
